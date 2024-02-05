@@ -2,20 +2,24 @@ import pandas as pd
 from pymongo import MongoClient
 from config import MONGO_URI
 
-DB_NAME = "Japan"
-COLLECTION_NAME = "Tokyo"
+# MongoDB Settings
+mongo_uri = MONGO_URI
+database_name = "Japan"
+collection_name = "Tokyo"
 
-excel_file_path = "attractions_data.xlsx"
-df = pd.read_excel(excel_file_path)
+# Load data from Excel file
+excel_file_path = "attractions.xlsx"
+attractions_df = pd.read_excel(excel_file_path)
+attractions_json = attractions_df.to_dict(orient='records')
 
-df['_id'] = df['Attraction'].astype(str) + '_' + df['Prefecture'].astype(str)
+# Connect to MongoDB
+client = MongoClient(mongo_uri)
+database = client[database_name]
+collection = database[collection_name]
 
-client = MongoClient(MONGO_URI)
-db = client[DB_NAME]
-collection = db[COLLECTION_NAME]
+# Insert attractions into MongoDB
+collection.insert_many(attractions_json)
 
-records = df.to_dict(orient='records')
-
-collection.insert_many(records, ordered=False)
-
+# Close MongoDB connection
 client.close()
+print("Attractions inserted into MongoDB.")
